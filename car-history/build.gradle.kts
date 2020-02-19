@@ -1,12 +1,16 @@
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
+import org.jlleitschuh.gradle.ktlint.KtlintExtension
 
 plugins {
-	id("org.springframework.boot") version "2.2.4.RELEASE"
-	id("io.spring.dependency-management") version "1.0.9.RELEASE"
+	kotlin("jvm") version Versions.kotlin apply false
+	kotlin("plugin.spring") version Versions.kotlin apply false
+	kotlin("kapt") version Versions.kotlin apply false
+
 	id("groovy")
-	kotlin("jvm") version "1.3.61"
-	kotlin("kapt") version "1.3.61"
-	kotlin("plugin.spring") version "1.3.61"
+	id("io.spring.dependency-management") version "1.0.9.RELEASE"
+	id("com.github.ben-manes.versions") version Versions.versionsPlugin
+	id("org.jlleitschuh.gradle.ktlint") version Versions.ktlintPlugin apply false
+	id("org.springframework.boot") version Versions.springBoot apply false
 }
 
 buildscript {
@@ -36,6 +40,7 @@ subprojects {
 	apply(plugin = "org.jetbrains.kotlin.jvm")
 	apply(plugin = "kotlin-kapt")
 	apply(plugin = "org.springframework.boot")
+	apply(plugin = "org.jlleitschuh.gradle.ktlint")
 	apply(plugin = "org.jetbrains.kotlin.plugin.spring")
 
 	repositories {
@@ -55,7 +60,6 @@ subprojects {
 
 		implementation("io.arrow-kt:arrow-core:0.10.4n")
 		implementation("io.arrow-kt:arrow-syntax:0.10.4")
-		kapt("io.arrow-kt:arrow-meta:0.10.4")
 
 		implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.3.3")
 		implementation("org.jetbrains.kotlinx:kotlinx-coroutines-reactive:1.3.3")
@@ -72,13 +76,26 @@ subprojects {
 
 	tasks.withType<Test> {
 		useJUnitPlatform()
+		outputs.upToDateWhen { false }
+
+		testLogging {
+			events("passed", "failed", "skipped")
+			exceptionFormat = org.gradle.api.tasks.testing.logging.TestExceptionFormat.FULL
+		}
 	}
 
 	tasks.withType<KotlinCompile> {
 		kotlinOptions {
-			freeCompilerArgs = listOf("-Xjsr305=strict")
-			jvmTarget = "1.8"
+			jvmTarget = Versions.java
+			freeCompilerArgs = listOf(
+					"-Xjsr305=strict",
+					"-XXLanguage:+InlineClasses"
+			)
 		}
+	}
+
+	configure<org.jlleitschuh.gradle.ktlint.KtlintExtension> {
+		version.set(Versions.ktlint)
 	}
 
 	sourceSets {
@@ -90,17 +107,5 @@ subprojects {
 				}
 			}
 		}
-	}
-}
-
-kapt {
-	correctErrorTypes = true
-
-	javacOptions {
-		option("SomeJavacOption", "OptionValue")
-	}
-
-	arguments {
-		arg("SomeKaptArgument", "ArgumentValue")
 	}
 }
