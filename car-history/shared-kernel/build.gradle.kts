@@ -4,7 +4,7 @@ plugins {
     id("org.jetbrains.kotlin.jvm")
 }
 
-group = "pl.stosik.car.history"
+group = "pl.pl.stosik.car.history"
 version = "'0.0.1-SNAPSHOT"
 
 repositories {
